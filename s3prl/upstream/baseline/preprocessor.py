@@ -123,6 +123,10 @@ class OnlinePreprocessor(torch.nn.Module):
         # feat_list, mam_list: [{feat_type: 'mfcc', channel: 0, log: False, delta: 2, cmvn: 'True'}, ...]
         # wavs_len: [len1, len2, ...]
 
+        #import pdb; pdb.set_trace()
+        #import numpy as np
+        #np.save(open('wav.npy', 'wb'), wavs)
+
         feat_list = self._check_list(feat_list)
         if wavs is None:
             max_channel_id = max([int(args['channel']) if 'channel' in args else 0 for args in feat_list])
@@ -152,6 +156,11 @@ class OnlinePreprocessor(torch.nn.Module):
         # complx, linear, phase, mel, mfcc: (*, channel_size, feat_dim, max_len)
 
         def select_feat(variables, feat_type, channel=0, log=False, delta=0, cmvn=False):
+            import pdb; pdb.set_trace()
+            import numpy as np
+            np.save(open('wav.npy', 'wb'), variables['wav'].numpy())
+            np.save(open('stft.npy', 'wb'), variables['complx'].numpy())
+            np.save(open('mel_test.npy', 'wb'), variables['mel'].numpy())
             raw_feat = variables[feat_type].select(dim=-3, index=channel)
             # apply log scale
             if bool(log):
