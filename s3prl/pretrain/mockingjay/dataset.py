@@ -16,6 +16,7 @@ import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 import torchaudio
+import scipy.io.wavfile
 #-------------#
 from pretrain.mockingjay.task import generate_masked_acoustic_model_data
 from pretrain.bucket_dataset import FeatDataset
@@ -50,7 +51,7 @@ class OnlineAcousticDataset(FeatDataset):
     
     def __init__(self, extracter, task_config, bucket_size, file_path, sets, 
                  max_timestep=0, libri_root=None, target_level=-25, **kwargs):
-        max_timestep *= 160
+        max_timestep *= 160 #why 160?
         super(OnlineAcousticDataset, self).__init__(extracter, task_config, bucket_size, file_path, sets, 
                                                     max_timestep, libri_root, **kwargs)
         self.target_level = target_level
@@ -69,7 +70,10 @@ class OnlineAcousticDataset(FeatDataset):
         if self.libri_root is None:
             return torch.FloatTensor(np.load(os.path.join(self.root, feat_path)))
         else:
-            wav, _ = torchaudio.load(os.path.join(self.libri_root, feat_path))
+            #wav, _ = torchaudio.load(os.path.join(self.libri_root, feat_path))
+            _, wav = scipy.io.wavfile.read(os.path.join(self.libri_root, feat_path))
+            wav = np.expand_dims(wav, axis=0)
+            wav = torch.Tensor(wav)
             wav = self._normalize_wav_decibel(wav.squeeze())
             return wav # (seq_len)
 
@@ -77,10 +81,12 @@ class OnlineAcousticDataset(FeatDataset):
         if self.libri_root is not None:
             x_pad_batch = x_pad_batch.unsqueeze(1) # (batch_size, channel=1, seq_len)
             feat_list = self.extracter(x_pad_batch)
+        #import pdb; pdb.set_trace()
         return generate_masked_acoustic_model_data(feat_list, config=self.task_config)
 
     def __getitem__(self, index):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
         x_pad_batch = pad_sequence(x_batch, batch_first=True)
+        #import pdb; pdb.set_trace()
         return self._process_x_pad_batch(x_pad_batch)
