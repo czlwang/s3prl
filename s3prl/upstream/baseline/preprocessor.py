@@ -149,19 +149,20 @@ class OnlinePreprocessor(torch.nn.Module):
         complx = self._stft(wavs.reshape(-1, shape[-1]), window=self._window)
         complx = complx.reshape(shape[:-1] + complx.shape[-3:])
         # complx: (*, channel_size, feat_dim, max_len, 2)
+        #import pdb; pdb.set_trace()
         linear, phase = self._magphase(complx)
         mel = self._melscale(linear)
+        linear = linear[:,:10,:]
         mfcc = self._mfcc_trans(wavs)
         complx = complx.transpose(-1, -2).reshape(*mfcc.shape[:2], -1, mfcc.size(-1))
         # complx, linear, phase, mel, mfcc: (*, channel_size, feat_dim, max_len)
 
         def select_feat(variables, feat_type, channel=0, log=False, delta=0, cmvn=False):
-            import pdb; pdb.set_trace()
-            import numpy as np
-            np.save(open('wav.npy', 'wb'), variables['wav'].numpy())
-            np.save(open('stft.npy', 'wb'), variables['complx'].numpy())
-            np.save(open('mel_test.npy', 'wb'), variables['mel'].numpy())
             raw_feat = variables[feat_type].select(dim=-3, index=channel)
+            #import numpy as np
+            #np.save(open('wav.npy', 'wb'), variables["wav"].numpy())
+            np.save(open('linear.npy', 'wb'), variables["linear"].numpy())
+            #import pdb; pdb.set_trace()
             # apply log scale
             if bool(log):
                 raw_feat = (raw_feat + self.eps).log()   
@@ -180,6 +181,7 @@ class OnlinePreprocessor(torch.nn.Module):
                     cmvn_feat = (feat - feat.mean(dim=-1, keepdim=True)) / (feat.std(dim=-1, keepdim=True) + self.eps)
                     cmvn_feats.append(cmvn_feat.transpose(-1, -2))
                 feats = pad_sequence(cmvn_feats, batch_first=True).transpose(-1, -2)
+            #import pdb; pdb.set_trace()
             return feats
             # return: (*, feat_dim, max_len)
         
