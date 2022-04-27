@@ -51,6 +51,7 @@ class FeatDataset(Dataset):
             self.table = self.table[self.table.length > (-1 * max_timestep)]
 
         X = self.table['file_path'].tolist()
+        #import pdb; pdb.set_trace()
         X_lens = self.table['length'].tolist()
         self.num_samples = len(X)
         print('[Dataset] - Number of individual training instances:', self.num_samples)
@@ -109,6 +110,7 @@ class WaveDataset(Dataset):
     ):
         super().__init__()
 
+        import pdb; pdb.set_trace()
         self.task_config = task_config
         self.libri_root = libri_root
         self.sample_length = task_config["sequence_length"]
@@ -165,6 +167,7 @@ class WaveDataset(Dataset):
             self.X.append(batch_x)
 
     def _sample(self, x):
+        import pdb; pdb.set_trace()
         if self.sample_length <= 0:
             return x
         if len(x) < self.sample_length:

@@ -43,6 +43,7 @@ class KaldiAcousticDataset(FeatDataset):
     def __getitem__(self, index):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
+        import pdb; pdb.set_trace()
         x_pad_batch = pad_sequence(x_batch, batch_first=True)
         return generate_masked_acoustic_model_data(spec=(x_pad_batch,), config=self.task_config)
 
@@ -67,6 +68,7 @@ class OnlineAcousticDataset(FeatDataset):
         return wav
 
     def _load_feat(self, feat_path):
+        import pdb; pdb.set_trace()
         if self.libri_root is None:
             return torch.FloatTensor(np.load(os.path.join(self.root, feat_path)))
         else:
@@ -81,12 +83,12 @@ class OnlineAcousticDataset(FeatDataset):
         if self.libri_root is not None:
             x_pad_batch = x_pad_batch.unsqueeze(1) # (batch_size, channel=1, seq_len)
             feat_list = self.extracter(x_pad_batch)
-        #import pdb; pdb.set_trace()
         return generate_masked_acoustic_model_data(feat_list, config=self.task_config)
 
     def __getitem__(self, index):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
+        import pdb; pdb.set_trace()
         x_pad_batch = pad_sequence(x_batch, batch_first=True)
         #import pdb; pdb.set_trace()
         return self._process_x_pad_batch(x_pad_batch)

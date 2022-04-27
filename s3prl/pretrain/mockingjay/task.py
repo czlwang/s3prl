@@ -101,8 +101,10 @@ def generate_masked_acoustic_model_data(spec, config):
             
             # time masking
             if config['mask_proportion'] > 0:
+
                 mask_consecutive = random.randint(config['mask_consecutive_min'], config['mask_consecutive_max'])
                 valid_start_max = max(spec_len[idx] - mask_consecutive - 1, 0) # compute max valid start point for a consecutive mask
+                #import pdb; pdb.set_trace()
                 proportion = round(spec_len[idx] * config['mask_proportion'] / mask_consecutive)
                 if config['mask_allow_overlap']:
                     # draw `proportion` samples from the range (0, valid_index_range) and without replacement

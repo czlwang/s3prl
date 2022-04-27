@@ -68,6 +68,7 @@ class Runner():
         if hasattr(upstream, 'loss_to_device'):
             print('[Runner] - Loss to device')
             upstream.loss_to_device()
+        import pdb; pdb.set_trace()
         return upstream
 
 
@@ -159,6 +160,7 @@ class Runner():
                     global_step = pbar.n + 1
 
                     with torch.cuda.amp.autocast(enabled=amp):
+                        #import pdb; pdb.set_trace()
                         loss, records = self.upstream(
                             data,
                             records=records,

@@ -16,7 +16,9 @@ from functools import partial
 from torch.nn.utils.rnn import pad_sequence
 from torchaudio.transforms import Spectrogram, MelScale, MFCC
 from torchaudio.functional import compute_deltas
-
+from scipy import signal, stats
+import numpy as np
+from superlet import superlet
 
 ############
 # CONSTANT #
@@ -118,6 +120,53 @@ class OnlinePreprocessor(torch.nn.Module):
             'cmvn': cmvn
         }
 
+    def get_stft(self, x, fs, show_fs=-1, normalizing=None, **kwargs):
+        f, t, Zxx = signal.stft(x, fs, **kwargs)
+        
+        if "return_onesided" in kwargs and kwargs["return_onesided"] == True:
+            Zxx = Zxx[:,:show_fs]
+            f = f[:show_fs]
+        else:
+            pass #TODO
+            #Zxx = np.concatenate([Zxx[:,:,:show_fs], Zxx[:,:,-show_fs:]], axis=-1)
+            #f = np.concatenate([f[:show_fs], f[-show_fs:]], axis=-1)
+            
+        if normalizing=="zscore":
+            Zxx = stats.zscore(Zxx, axis=-1)
+        elif normalizing=="db":
+            Zxx = np.log(Zxx)
+            
+        return f, t, torch.tensor(np.abs(Zxx))
+
+
+    def get_superlet(self, s_data, order_min=2, order_max=12, c_1=3, foi=None):
+        #s_data is [.., n_samples]
+        s_data = np.transpose(s_data)
+        def scale_from_period(period):
+            return period / (2 * np.pi)
+
+        fs = 2048  # sampling frequency
+        # frequencies of interest in Hz
+        if foi is None:
+            foi = np.linspace(5, 100, 100)
+        scales = scale_from_period(1 / foi)
+
+        spec = superlet(
+            s_data,
+            samplerate=fs,
+            scales=scales,
+            order_max=order_max,
+            order_min=order_min,
+            c_1=c_1,
+            adaptive=True,
+        )
+
+        # amplitude scalogram
+        #ampls = np.abs(spec)
+        ampls = np.square(np.abs(spec)) #NOTE
+        ampls = np.transpose(ampls, [2,0,1])
+        return ampls
+
     def forward(self, wavs=None, feat_list=None, wavs_len=None):
         # wavs: (*, channel_size, max_len)
         # feat_list, mam_list: [{feat_type: 'mfcc', channel: 0, log: False, delta: 2, cmvn: 'True'}, ...]
@@ -149,19 +198,23 @@ class OnlinePreprocessor(torch.nn.Module):
         complx = self._stft(wavs.reshape(-1, shape[-1]), window=self._window)
         complx = complx.reshape(shape[:-1] + complx.shape[-3:])
         # complx: (*, channel_size, feat_dim, max_len, 2)
-        #import pdb; pdb.set_trace()
         linear, phase = self._magphase(complx)
         mel = self._melscale(linear)
-        linear = linear[:,:10,:]
+        _,_,linear = self.get_stft(wavs.reshape(-1, shape[-1]), 2048, 20, return_onesided=True, normalizing="none", nperseg=256) #TODO hardcode sampling rate
+        linear = linear.reshape(shape[:-1] + linear.shape[-2:])
         mfcc = self._mfcc_trans(wavs)
         complx = complx.transpose(-1, -2).reshape(*mfcc.shape[:2], -1, mfcc.size(-1))
+        foi = np.linspace(60, 150, 100)
+        superlet = self.get_superlet(wavs.reshape(-1, shape[-1]), foi=foi)
+        superlet = superlet.reshape(shape[:-1] + superlet.shape[-2:])
+        #import pdb; pdb.set_trace()
         # complx, linear, phase, mel, mfcc: (*, channel_size, feat_dim, max_len)
 
-        def select_feat(variables, feat_type, channel=0, log=False, delta=0, cmvn=False):
+        def select_feat(variables, feat_type, channel=-1, log=False, delta=0, cmvn=False):
             raw_feat = variables[feat_type].select(dim=-3, index=channel)
             #import numpy as np
             #np.save(open('wav.npy', 'wb'), variables["wav"].numpy())
-            np.save(open('linear.npy', 'wb'), variables["linear"].numpy())
+            #np.save(open('linear.npy', 'wb'), variables["linear"].numpy())
             #import pdb; pdb.set_trace()
             # apply log scale
             if bool(log):
@@ -186,7 +239,8 @@ class OnlinePreprocessor(torch.nn.Module):
             # return: (*, feat_dim, max_len)
         
         local_variables = locals()
-        return self._transpose_list([select_feat(local_variables, **args) for args in feat_list])
+        results = self._transpose_list([select_feat(local_variables, **args) for args in feat_list])
+        return results
         # return: [(*, max_len, feat_dim), ...]
 
     def istft(self, linears=None, phases=None, linear_power=2, complxs=None):

@@ -74,6 +74,7 @@ class UpstreamPretrainExpert(nn.Module):
         print('[UpstreamPretrainExpert] - Number of parameters: ' + str(sum(p.numel() for p in self.model.parameters() if p.requires_grad)))
 
     def _get_train_dataloader(self, extracter):
+        #import pdb; pdb.set_trace()
         if 'libri_root' in self.datarc and 'kaldi' not in self.upstream_config['audio']:
             dataset = OnlineAcousticDataset(extracter,
                                             self.upstream_config['task'],
@@ -85,6 +86,7 @@ class UpstreamPretrainExpert(nn.Module):
                                            self.upstream_config['task'],
                                            self.datarc['train_batch_size'],
                                            **self.datarc)
+        #import pdb; pdb.set_trace()
         self.dataloader = DataLoader(dataset, batch_size=1, # for bucketing
                                      shuffle=True, num_workers=self.datarc['num_workers'],
                                      drop_last=False, pin_memory=True, collate_fn=dataset.collate_fn)
@@ -132,6 +134,7 @@ class UpstreamPretrainExpert(nn.Module):
             loss        
         """
 
+        import pdb; pdb.set_trace()
         spec_masked, pos_enc, mask_label, attn_mask, spec_target = data[0], data[1], data[2], data[3], data[4]
         spec_masked = spec_masked.to(self.device)
         
@@ -148,6 +151,7 @@ class UpstreamPretrainExpert(nn.Module):
         attn_mask = attn_mask.to(self.device)
         spec_target = spec_target.to(self.device)
         
+        import pdb; pdb.set_trace()
         loss, pred_spec = self.model(spec_masked, pos_enc, mask_label, attn_mask, spec_target)
 
         if global_step % log_step == 0:
@@ -251,6 +255,7 @@ class TransformerForMaskedAcousticModel(TransformerInitModel):
         self.loss = loss[config.loss] if hasattr(config, 'loss') else loss['L1']
 
     def forward(self, spec_input, pos_enc, mask_label=None, attention_mask=None, spec_label=None, head_mask=None):
+        import pdb; pdb.set_trace()
         outputs = self.Transformer(spec_input, pos_enc, attention_mask,
                             output_all_encoded_layers=False,
                             head_mask=head_mask)
@@ -266,4 +271,5 @@ class TransformerForMaskedAcousticModel(TransformerInitModel):
             return masked_spec_loss, pred_spec
         elif self.output_attentions:
             return all_attentions, pred_spec
+        #import pdb; pdb.set_trace()
         return pred_spec, pred_state
