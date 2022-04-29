@@ -1,11 +1,12 @@
 runner:
   n_epochs: -1
-  total_steps: 1000000
+  #total_steps: 1000000
+  total_steps: 100000
   gradient_clipping: 5.0
   gradient_accumulate_steps: 4
 
-  log_step: 10000
-  save_step: 50000
+  log_step: 500
+  save_step: 5000
   max_keep: 5
 
   fp16: false
@@ -17,10 +18,10 @@ optimizer:
 
 pretrain_expert:
   datarc:
-    num_workers: 0
-    train_batch_size: 4
+    num_workers: 16
+    train_batch_size: 256
     max_timestep: 0 # Max length for audio feature (0 for no restriction, negative value to set minimum timestep)
-    #libri_root: '/storage/czw/LanguageEcog/semantics/seeg_samples_broadband_2kHz' # If raw libri data is provided, use on-the-fly feature extraction, else use the pre-extracted features under `file_path`
-    #file_path: 'data/len_for_bucket' # Pre-extracted features path. When using on-the-fly feature extraction, this is used to provide length for bucketing.
-    file_path: '/storage/czw/LanguageEcog/semantics/seeg_samples_superlet/' # Pre-extracted features path. When using on-the-fly feature extraction, this is used to provide length for bucketing.
-    sets: ['m00185'] # can be the subset of ['train-clean-100', 'train-clean-360', 'train-other-500']
+    libri_root: '/storage/czw/LanguageEcog/semantics/seeg_samples_all_day_data_laplacian_T1Id6' # If raw libri data is provided, use on-the-fly feature extraction, else use the pre-extracted features under `file_path`
+    file_path: 'data/len_for_bucket' # Pre-extracted features path. When using on-the-fly feature extraction, this is used to provide length for bucketing.
+    #file_path: '/storage/czw/LanguageEcog/semantics/seeg_samples_superlet/' # Pre-extracted features path. When using on-the-fly feature extraction, this is used to provide length for bucketing.
+    sets: ['m00191'] # can be the subset of ['train-clean-100', 'train-clean-360', 'train-other-500']

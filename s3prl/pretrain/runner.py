@@ -68,7 +68,7 @@ class Runner():
         if hasattr(upstream, 'loss_to_device'):
             print('[Runner] - Loss to device')
             upstream.loss_to_device()
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         return upstream
 
 

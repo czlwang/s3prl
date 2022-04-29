@@ -134,7 +134,7 @@ class UpstreamPretrainExpert(nn.Module):
             loss        
         """
 
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         spec_masked, pos_enc, mask_label, attn_mask, spec_target = data[0], data[1], data[2], data[3], data[4]
         spec_masked = spec_masked.to(self.device)
         
@@ -151,7 +151,7 @@ class UpstreamPretrainExpert(nn.Module):
         attn_mask = attn_mask.to(self.device)
         spec_target = spec_target.to(self.device)
         
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         loss, pred_spec = self.model(spec_masked, pos_enc, mask_label, attn_mask, spec_target)
 
         if global_step % log_step == 0:
@@ -255,7 +255,7 @@ class TransformerForMaskedAcousticModel(TransformerInitModel):
         self.loss = loss[config.loss] if hasattr(config, 'loss') else loss['L1']
 
     def forward(self, spec_input, pos_enc, mask_label=None, attention_mask=None, spec_label=None, head_mask=None):
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         outputs = self.Transformer(spec_input, pos_enc, attention_mask,
                             output_all_encoded_layers=False,
                             head_mask=head_mask)

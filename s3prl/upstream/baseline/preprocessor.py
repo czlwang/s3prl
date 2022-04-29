@@ -133,6 +133,7 @@ class OnlinePreprocessor(torch.nn.Module):
             
         if normalizing=="zscore":
             Zxx = stats.zscore(Zxx, axis=-1)
+            Zxx = Zxx[:,:,5:-5]
         elif normalizing=="db":
             Zxx = np.log(Zxx)
             
@@ -200,13 +201,13 @@ class OnlinePreprocessor(torch.nn.Module):
         # complx: (*, channel_size, feat_dim, max_len, 2)
         linear, phase = self._magphase(complx)
         mel = self._melscale(linear)
-        _,_,linear = self.get_stft(wavs.reshape(-1, shape[-1]), 2048, 20, return_onesided=True, normalizing="none", nperseg=256) #TODO hardcode sampling rate
+        _,_,linear = self.get_stft(wavs.reshape(-1, shape[-1]), 2048, 25, return_onesided=True, normalizing="zscore", nperseg=256) #TODO hardcode sampling rate
         linear = linear.reshape(shape[:-1] + linear.shape[-2:])
         mfcc = self._mfcc_trans(wavs)
         complx = complx.transpose(-1, -2).reshape(*mfcc.shape[:2], -1, mfcc.size(-1))
         foi = np.linspace(60, 150, 100)
-        superlet = self.get_superlet(wavs.reshape(-1, shape[-1]), foi=foi)
-        superlet = superlet.reshape(shape[:-1] + superlet.shape[-2:])
+        #superlet = self.get_superlet(wavs.reshape(-1, shape[-1]), foi=foi)
+        #superlet = superlet.reshape(shape[:-1] + superlet.shape[-2:])
         #import pdb; pdb.set_trace()
         # complx, linear, phase, mel, mfcc: (*, channel_size, feat_dim, max_len)
 
