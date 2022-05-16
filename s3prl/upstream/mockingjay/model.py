@@ -439,6 +439,7 @@ class TransformerModel(TransformerInitModel):
     """
     def __init__(self, config, input_dim, output_attentions=False, keep_multihead_output=False, with_input_module=True):
         super(TransformerModel, self).__init__(config, output_attentions)
+        import pdb; pdb.set_trace()
         self.with_input_module = with_input_module
         if self.with_input_module: self.input_representations = TransformerInputRepresentations(config, input_dim)
         self.encoder = TransformerEncoder(config, output_attentions=output_attentions,
@@ -459,6 +460,8 @@ class TransformerModel(TransformerInitModel):
         return [layer.attention.self.multihead_output for layer in self.encoder.layer]
 
     def forward(self, spec_input, pos_enc=None, attention_mask=None, output_all_encoded_layers=True, head_mask=None):
+        import pdb; pdb.set_trace()
+
         if attention_mask is None:
             attention_mask = torch.ones_like(spec_input)
 
@@ -500,6 +503,7 @@ class TransformerModel(TransformerInitModel):
                                       extended_attention_mask,
                                       output_all_encoded_layers=output_all_encoded_layers,
                                       head_mask=head_mask)
+        import pdb; pdb.set_trace()
         if self.output_attentions:
             all_attentions, encoded_layers = encoded_layers
         if not output_all_encoded_layers:

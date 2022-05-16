@@ -133,7 +133,7 @@ class OnlinePreprocessor(torch.nn.Module):
             
         if normalizing=="zscore":
             Zxx = stats.zscore(Zxx, axis=-1)
-            Zxx = Zxx[:,:,5:-5]
+            Zxx = Zxx[:,:,10:-10]
         elif normalizing=="db":
             Zxx = np.log(Zxx)
             
@@ -168,7 +168,9 @@ class OnlinePreprocessor(torch.nn.Module):
         ampls = np.transpose(ampls, [2,0,1])
         return ampls
 
+
     def forward(self, wavs=None, feat_list=None, wavs_len=None):
+        import pdb; pdb.set_trace()
         # wavs: (*, channel_size, max_len)
         # feat_list, mam_list: [{feat_type: 'mfcc', channel: 0, log: False, delta: 2, cmvn: 'True'}, ...]
         # wavs_len: [len1, len2, ...]
@@ -201,7 +203,7 @@ class OnlinePreprocessor(torch.nn.Module):
         # complx: (*, channel_size, feat_dim, max_len, 2)
         linear, phase = self._magphase(complx)
         mel = self._melscale(linear)
-        _,_,linear = self.get_stft(wavs.reshape(-1, shape[-1]), 2048, 25, return_onesided=True, normalizing="zscore", nperseg=256) #TODO hardcode sampling rate
+        _,_,linear = self.get_stft(wavs.reshape(-1, shape[-1]), 2048, show_fs=45, nperseg=400, noverlap=350, normalizing="zscore", return_onesided=True, padded=False) #TODO hardcode sampling rate
         linear = linear.reshape(shape[:-1] + linear.shape[-2:])
         mfcc = self._mfcc_trans(wavs)
         complx = complx.transpose(-1, -2).reshape(*mfcc.shape[:2], -1, mfcc.size(-1))

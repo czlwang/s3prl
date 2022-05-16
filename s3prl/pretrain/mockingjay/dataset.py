@@ -31,6 +31,7 @@ class KaldiAcousticDataset(FeatDataset):
                  max_timestep=0, libri_root=None, **kwargs):
         super(KaldiAcousticDataset, self).__init__(extracter, task_config, bucket_size, file_path, sets, 
                                                    max_timestep, libri_root, **kwargs)
+        import pdb; pdb.set_trace()
 
     def _load_feat(self, feat_path):
         if self.libri_root is None:
@@ -55,6 +56,7 @@ class OnlineAcousticDataset(FeatDataset):
         max_timestep *= 160 #why 160?
         super(OnlineAcousticDataset, self).__init__(extracter, task_config, bucket_size, file_path, sets, 
                                                     max_timestep, libri_root, **kwargs)
+        import pdb; pdb.set_trace()
         self.target_level = target_level
         self.sample_length = self.sample_length * 160
     
@@ -80,6 +82,7 @@ class OnlineAcousticDataset(FeatDataset):
             return wav # (seq_len)
 
     def _process_x_pad_batch(self, x_pad_batch):
+        import pdb; pdb.set_trace()
         if self.libri_root is not None:
             x_pad_batch = x_pad_batch.unsqueeze(1) # (batch_size, channel=1, seq_len)
             feat_list = self.extracter(x_pad_batch)
@@ -88,7 +91,7 @@ class OnlineAcousticDataset(FeatDataset):
     def __getitem__(self, index):
         # Load acoustic feature and pad
         x_batch = [self._sample(self._load_feat(x_file)) for x_file in self.X[index]]
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         x_pad_batch = pad_sequence(x_batch, batch_first=True)
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
         return self._process_x_pad_batch(x_pad_batch)
